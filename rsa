@@ -1,137 +1,48 @@
-#!/usr/bin/python3
+#!/usr/bin/env bash
+#is a challenge
+check_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                num2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                num2=$(echo $a*$num2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                num2=$3
+        fi
 
-import time
-import math
-import sys
+        num1=$2
+        num=$(echo "$1" | tr ':' '=')
 
-def pollard_rho(n):
-	if n % 2 == 0:
-	   return 2
-	x = 2
-	y = 2
-	d = 1
+        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
+	        if ((result == 1)); then
+		        numcp=$num1
+		        num1=$num2
+		        num2=$numcp
+                fi
 
-	f = lambda x: (x**2 + 1) % n
+        echo "$num$num1*$num2"
+}
 
-	while d == 1:
-           x = f(x)
-           y = f(f(y))
-           d = math.gcd(abs(x - y), n)
+if [ $# -ne 1 ]
+then
+        echo 'Usage: rsa <file>'
+        exit 1
+else
 
-	return d
+        while read i
+        do
 
-def is_prime(num):
-    # Check if a number is prime
-    if num < 2:
-        # If num is less than 2, it is not prime, so return False
-        return False
-    for i in range(2, int(math.sqrt(num)) + 1):
-        # If num is divisible by any number in the range [2, sqrt(num)],\
-        #        it is not prime, so return False
-        if num % i == 0:
-            return False
-    # If num is not divisible by any number in the \
-    #        range [2, sqrt(num)], it is prime, so return True
-    return True
+                result=$(factor "$i")
+                check_factor $result
 
-def main():
-    # Check if the correct number of command-line arguments is provided
-    if len(sys.argv) != 2:
-        print("Usage: python factorize.py <file>")
-        return
-
-    file_path = sys.argv[1]
-
-    start_time = time.time()
-    try:
-        with open(file_path, 'r') as file:
-            # Read the first line of the file and convert it to an integer
-            number = int(file.readline().strip())
-        # Factorize the number using Pollard's rho algorithm
-        p = pollard_rho(number)
-        # Continue factorizing until a prime factor is found
-        while not is_prime(p):
-            p = pollard_rho(p)
-        q = number // p
-        # The number is prime
-        if p == number or q == number:
-            print(f"{number} is prime.")
-        else:
-            # Print the prime factors
-            print(f"{number}={p}*{q}")
-
-        if time.time() - start_time > 5:
-            print("Time limit exceeded")
-            exit()
-
-    except FileNotFoundError:
-        print(f"File '{file_path}' not found.")
-
-
-if __name__ == '__main__':
-    main()
-
-FACTORS
-
-#!/usr/bin/python3
-import time
-import math
-import sys
-
-def pollard_rho(n):
-    if n % 2 == 0:
-        return 2
-
-    x = 2
-    y = 2
-    d = 1
-    # Define the function f(x) using a lambda function
-    f = lambda x: (x**2 + 1) % n
-    # Loop until a non-trivial factor is found
-    while d == 1:
-        # Generate new values for x using the function f(x)
-        x = f(x)
-
-        # Generate new values for y using the function f(f(y))
-        y = f(f(y))
-        # Calculate the greatest common divisor between |x - y| and n
-        d = math.gcd(abs(x - y), n)
-    # Return the non-trivial factor
-    return d
-
-def main():
-    # Check if the correct number of command-line arguments is provided
-    if len(sys.argv) != 2:
-        # Print the correct usage of the program
-        print("Usage: python factorize.py <file>")
-        # Exit the program if the correct arguments are not provided
-        return
-    # Get the file path from the command-line argument
-    file_path = sys.argv[1]
-    # start timing
-    start_time = time.time()
-    try:
-        # Open the file in read mode
-        with open(file_path, 'r') as file:
-	# Read all lines of the file into a lis
-            numbers = file.readlines()
-        # Iterate through each number in the list
-        for number in numbers:
-	# Convert the string number to an integer
-            num = int(number.strip())
-	# Factorize the number using Pollard's rho algorithm
-            factor = pollard_rho(num)
-	if factor == num:
-	  print(f"{num} is prime.")
-	else:
-	 print(f"{num}={factor}*{num // factor}")
-
-	 if time.time() - start_time > 5:
-	  print("Time limit exceeded")
-	  exit()
-
-	except FileNotFoundError:
-	 print(f"File '{file_path}' not found.")
-
-	 if __name__ == '__main__':
-	 main()
+        done < "$1"
+fi
